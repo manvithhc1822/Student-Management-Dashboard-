@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Management Dashboard</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #000000;
+      margin: 0;
+      padding: 20px;
+      color: #e0e0e0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: #121212;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+    }
+
+    h1 {
+      text-align: center;
+      color: #00fae0;
+    }
+
+    form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    form input,
+    form select {
+      padding: 8px;
+      flex: 1;
+      border: 1px solid #00fae0;
+      border-radius: 4px;
+      background: #1e1e1e;
+      color: #e0e0e0;
+    }
+
+    form input::placeholder {
+      color: #66fff5;
+    }
+
+    form select option {
+      background: #1e1e1e;
+      color: #e0e0e0;
+    }
+
+    button {
+      padding: 8px 12px;
+      cursor: pointer;
+      background: #00fae0;
+      color: #000000;
+      border: none;
+      border-radius: 4px;
+      transition: 0.3s;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #00d7b7;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      color: #e0e0e0;
+    }
+
+    th, td {
+      border: 1px solid #00fae0;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background: #00fae0;
+      color: #000000;
+    }
+
+    #search {
+      width: 100%;
+      padding: 8px;
+      margin-top: 10px;
+      border-radius: 4px;
+      border: 1px solid #00fae0;
+      background: #1e1e1e;
+      color: #e0e0e0;
+    }
+
+    #search::placeholder {
+      color: #66fff5;
+    }
+
+    .action-btn {
+      margin: 2px;
+      padding: 5px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .delete {
+      background: #ff4d4d;
+      color: black;
+    }
+
+    .delete:hover {
+      background: #e63939;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Student Management Dashboard</h1>
+
+  <form id="studentForm">
+    <input type="hidden" id="studentId">
+    <input type="text" id="registerNumber" placeholder="Register Number" required>
+    <input type="text" id="name" placeholder="Student Name" required>
+    <input type="email" id="email" placeholder="Email" required>
+
+    <!-- Course Selection Dropdown -->
+      <select id="course" required>
+      <option value="">Select Course</option>
+      <option value="BCA">BCA</option>
+      <option value="BBA">BBA</option>
+      <option value="BTech">BTech</option>
+      <option value="MCA">B COM</option>
+      <option value="MBA">BSC</option>
+      <option value="MCA">BA</option>
+      <option value="MCA">MCA</option>
+      <option value="MCA">MBA</option>
+    </select>
+
+    <button type="submit">Save</button>
+  </form>
+
+  <input type="text" id="search" placeholder="Search students...">
+
+  <table>
+    <thead>
+      <tr>
+        <th>Register Number</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Course</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="studentTable"></tbody>
+  </table>
+</div>
+
+<script>
+  let students = JSON.parse(localStorage.getItem("students")) || [];
+
+  const form = document.getElementById("studentForm");
+  const table = document.getElementById("studentTable");
+  const searchInput = document.getElementById("search");
+
+  function saveToLocalStorage() {
+    localStorage.setItem("students", JSON.stringify(students));
+  }
+
+  function renderStudents(data = students) {
+    table.innerHTML = "";
+    data.forEach((student, index) => {
+      table.innerHTML += `
+        <tr>
+          <td>${student.registerNumber}</td>
+          <td>${student.name}</td>
+          <td>${student.email}</td>
+          <td>${student.course}</td>
+          <td>
+            <button class="action-btn" onclick="editStudent(${index})" style="background:#00fae0; color:#000;">Edit</button>
+            <button class="action-btn delete" onclick="deleteStudent(${index})">Delete</button>
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  form.addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const id = document.getElementById("studentId").value;
+    const registerNumber = document.getElementById("registerNumber").value.trim();
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const course = document.getElementById("course").value;
+
+    if (id === "") {
+      students.push({ registerNumber, name, email, course });
+    } else {
+      students[id] = { registerNumber, name, email, course };
+    }
+
+    saveToLocalStorage();
+    renderStudents();
+    form.reset();
+    document.getElementById("studentId").value = "";
+  });
+
+  function editStudent(index) {
+    document.getElementById("studentId").value = index;
+    document.getElementById("registerNumber").value = students[index].registerNumber;
+    document.getElementById("name").value = students[index].name;
+    document.getElementById("email").value = students[index].email;
+    document.getElementById("course").value = students[index].course;
+  }
+
+  function deleteStudent(index) {
+    students.splice(index, 1);
+    saveToLocalStorage();
+    renderStudents();
+  }
+
+  searchInput.addEventListener("input", function() {
+    const value = this.value.toLowerCase();
+    const filtered = students.filter(s =>
+      s.registerNumber.toLowerCase().includes(value) ||
+      s.name.toLowerCase().includes(value) ||
+      s.email.toLowerCase().includes(value) ||
+      s.course.toLowerCase().includes(value)
+    );
+    renderStudents(filtered);
+  });
+
+  renderStudents();
+</script>
+
+</body>
+</html>
